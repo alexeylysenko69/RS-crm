@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Rokser Store - CRM</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-bg-alt: #162032;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --border: #334155;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        html, body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            overflow-x: hidden;
+            width: 100%;
+            min-height: 100%;
+            -webkit-text-size-adjust: 100%;
+            touch-action: pan-x pan-y;
+        }
+
+        body {
+            padding-bottom: calc(88px + env(safe-area-inset-bottom));
+        }
+
+        header {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        h1 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.01em;
+        }
+
+        .store-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+
+        .sync-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            padding: 5px 10px;
+            border-radius: 999px;
+        }
+
+        .sync-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .sync-dot.syncing {
+            background: var(--warning);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        .container {
+            padding: 16px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Stats & Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 15px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .card-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .card-value.success {
+            color: var(--success);
+        }
+
+        /* Nav Bar */
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 4px calc(8px + env(safe-area-inset-bottom));
+            z-index: 1000;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            gap: 4px;
+            cursor: pointer;
+            padding: 4px 6px;
+            flex: 1;
+            transition: color 0.15s ease;
+        }
+
+        .nav-item.active {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .nav-item svg {
+            width: 21px;
+            height: 21px;
+            fill: currentColor;
+        }
+
+        /* Buttons & Inputs (16px prevents iOS auto-zoom) */
+        .btn {
+            background: var(--accent);
+            color: #ffffff;
+            border: none;
+            padding: 11px 16px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn:active {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: var(--text-color);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 13px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-color);
+            margin-bottom: 12px;
+            font-size: 16px !important;
+            line-height: 1.3;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 64px;
+        }
+
+        label {
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        /* Inventory List */
+        .item-row {
+            display: flex;
+            align-items: flex-start;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 12px;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .item-img {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            object-fit: cover;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 3px;
+        }
+
+        .item-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .size-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .size-chip {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 2px 7px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .size-chip.empty {
+            opacity: 0.45;
+            text-decoration: line-through;
+        }
+
+        .item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .action-btns-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .icon-btn {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .icon-btn.delete {
+            color: var(--danger);
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        /* Multi-size Grid in Product Modal */
+        .size-grid-box {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .size-cell {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .size-cell.has-qty {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        .size-cell-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-color);
+        }
+
+        .size-stepper {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 4px;
+        }
+
+        .step-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .size-qty-val {
+            font-size: 0.85rem;
+            font-weight: 700;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Carrier Selector */
+        .carrier-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .carrier-card {
+            background: var(--bg-color);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+        }
+
+        .carrier-card.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.12);
+        }
+
+        .carrier-logo-wrap {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carrier-inline {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            vertical-align: middle;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .carrier-inline svg {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* Transit Product Spec Box */
+        .transit-product-box {
+            margin-top: 10px;
+            padding-top: 9px;
+            border-top: 1px dashed var(--border);
+            background: rgba(15, 23, 42, 0.55);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 0.8rem;
+        }
+
+        .location-pill {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            margin-top: 6px;
+            font-size: 0.78rem;
+            color: #cbd5e1;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            padding: 6px 9px;
+            border-radius: 8px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            pointer-events: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(2, 6, 23, 0.78);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .modal.active {
+            display: flex;
+            pointer-events: auto;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 18px;
+            width: 100%;
+            max-width: 440px;
+            max-height: 88vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .modal-close-x {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 0.73rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .badge-orange {
+            background: rgba(245, 158, 11, 0.18);
+            color: var(--warning);
+        }
+
+        .badge-green {
+            background: rgba(34, 197, 94, 0.18);
+            color: var(--success);
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.18);
+            color: var(--danger);
+        }
+
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            top: 68px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-16px);
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid var(--accent);
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+            z-index: 3000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<header>
+    <h1><span class="store-dot"></span> Rokser Store</h1>
+    <div class="sync-pill" id="sync-status-pill">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-label">НП Sync 24/7</span>
+    </div>
+</header>
+
+<div class="container">
+    <!-- ОГЛЯД -->
+    <div id="tab-overview" class="tab-content active">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h3 style="font-size: 1rem;">Статистика</h3>
+            <select id="stats-period" style="width: auto; margin-bottom: 0; padding: 7px 12px;" onchange="updateOverview()">
+                <option value="week">За тиждень</option>
+                <option value="month" selected>За місяць</option>
+                <option value="3months">За 3 місяці</option>
+                <option value="6months">За 6 місяців</option>
+                <option value="year">За рік</option>
+            </select>
+        </div>
+
+        <div class="stats-grid">
+            <div class="card">
+                <div class="card-title">Виручка (Сумарна)</div>
+                <div class="card-value" id="stat-revenue">0 ₴</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Чиста виручка</div>
+                <div class="card-value success" id="stat-profit">0 ₴</div>
+            </div>
+        </div>
+
+        <div class="stats-grid" style="grid-template-columns: 1fr 1fr 1fr; margin-bottom: 16px;">
+            <div class="card" style="padding: 12px; text-align: center; cursor: pointer;" onclick="openFilteredList('success')">
+                <div class="card-title">Успішні</div>
+                <div class="card-value" id="stat-success" style="font-size: 1.1rem;">0</div>
+            </div>
+            <div class="card" style="padding: 12px; text-align: center; cursor: pointer;" onclick="openFilteredList('returns')">
+                <div class="card-title">Відмови</div>
+                <div class="card-value" id="stat-returns" style="font-size: 1.1rem; color: var(--danger);">0</div>
+            </div>
+            <div class="card" style="padding: 12px; text-align: center; cursor: pointer;" onclick="openFilteredList('clients')">
+                <div class="card-title">Клієнтів</div>
+                <div class="card-value" id="stat-clients" style="font-size: 1.1rem;">0</div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 18px 0 10px 0;">
+            <h3 style="font-size: 1rem;">📦 В дорозі</h3>
+            <span style="font-size: 0.74rem; color: var(--text-muted);" id="last-sync-time">Автооновлення кожні 5 хв</span>
+        </div>
+        <div id="transit-list"></div>
+
+        <h3 style="font-size: 1rem; margin: 20px 0 10px 0;">⚠️ Закінчується на складі</h3>
+        <div id="low-stock-list"></div>
+    </div>
+
+    <!-- СКЛАД -->
+    <div id="tab-inventory" class="tab-content">
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <input type="text" id="search-inventory" placeholder="Пошук: бренд, модель, ID..." oninput="renderInventory()" style="margin-bottom: 0;">
+            <button class="btn" style="width: auto; white-space: nowrap;" onclick="openProductModal()">+ Товар</button>
+        </div>
+        <div id="inventory-list"></div>
+    </div>
+
+    <!-- ЗАМОВЛЕННЯ -->
+    <div id="tab-orders" class="tab-content">
+        <div style="display: flex; gap: 8px; margin-bottom: 14px;">
+            <select id="order-status-filter" onchange="renderOrders()" style="margin-bottom: 0;">
+                <option value="all">Усі статуси</option>
+                <option value="created">Створене (не відправлене)</option>
+                <option value="transit">В дорозі</option>
+                <option value="delivered">Доставлено</option>
+                <option value="returned">Відмова</option>
+            </select>
+            <button class="btn" style="width: auto; white-space: nowrap;" onclick="openOrderModal()">+ Замовлення</button>
+        </div>
+        <div id="orders-list"></div>
+    </div>
+
+    <!-- ФІНАНСИ -->
+    <div id="tab-finance" class="tab-content">
+        <div class="card" style="margin-bottom: 16px;">
+            <h3 style="font-size: 1rem; margin-bottom: 12px;">Вартість складу</h3>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                <span style="color: var(--text-muted);">За собівартістю:</span>
+                <strong id="fin-cost">0 ₴</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: var(--text-muted);">Потенційна ціна:</span>
+                <strong id="fin-potential" style="color: var(--success);">0 ₴</strong>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 1rem; margin-bottom: 12px;">Витрати на рекламу</h3>
+            <input type="text" id="ad-channel" placeholder="Канал / кампанія (наприклад, Instagram)">
+            <input type="number" id="ad-amount" placeholder="Сума, ₴">
+            <button class="btn" onclick="addExpense()">+ Додати витрату</button>
+            <div id="expenses-list" style="margin-top: 16px;"></div>
+        </div>
+    </div>
+
+    <!-- НАЛАШТУВАННЯ -->
+    <div id="tab-settings" class="tab-content">
+        <div class="card">
+            <h3 style="font-size: 1rem; margin-bottom: 6px;">Підключення Нової пошти</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 14px;">
+                Вкажіть API / IP-адресу Нової пошти для цілодобової автоматичної синхронізації статусів ТТН кожні 5 хвилин.
+            </p>
+            <label for="np-api-url">API / IP-адреса Нової пошти</label>
+            <input type="text" id="np-api-url" placeholder="https://api.novaposhta.ua/v2.0/json/">
+            <button class="btn" onclick="saveNpSettings()">Зберегти</button>
+            <div id="np-settings-status" style="margin-top: 10px; font-size: 0.8rem; color: var(--success);"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ДОДАТИ / РЕДАГУВАТИ ТОВАР МОДАЛКА -->
+<div id="product-modal" class="modal" onclick="handleBackdropClick(event, 'product-modal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="product-modal-title">Додати товар</h3>
+            <button type="button" class="modal-close-x" onclick="closeModal('product-modal')">✕</button>
+        </div>
+
+        <input type="hidden" id="p-edit-id" value="">
+
+        <label>Фото товару</label>
+        <input type="file" id="p-img" accept="image/*">
+
+        <label>Назва бренду та моделі</label>
+        <input type="text" id="p-name" placeholder="напр. Off-White Худі Arrow">
+
+        <label>Артикул / ID</label>
+        <input type="text" id="p-sku" placeholder="P001">
+
+        <label>Категорія</label>
+        <select id="p-cat" onchange="renderSizeGridBuilder()">
+            <option value="Одяг">Одяг</option>
+            <option value="Взуття">Взуття</option>
+        </select>
+
+        <label>Колір</label>
+        <select id="p-color">
+            <option value="⚫ Чорний">⚫ Чорний</option>
+            <option value="⚪ Білий">⚪ Білий</option>
+            <option value="🔘 Сірий">🔘 Сірий</option>
+            <option value="🟢 Зелений">🟢 Зелений</option>
+            <option value="🔴 Червоний">🔴 Червоний</option>
+            <option value="🟣 Фіолетовий">🟣 Фіолетовий</option>
+            <option value="🔵 Синій">🔵 Синій</option>
+            <option value="🟦 Голубий">🟦 Голубий</option>
+            <option value="🟠 Оранжевий">🟠 Оранжевий</option>
+            <option value="🪖 Камуфляж">🪖 Камуфляж</option>
+        </select>
+
+        <label>Розміри та кількість в наявності</label>
+        <div id="p-size-grid" class="size-grid-box"></div>
+
+        <label>Специфіка товару (матеріал, крій, примітка)</label>
+        <input type="text" id="p-specs" placeholder="напр. 100% бавовна, оверсайз, без утеплення">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+                <label>Ціна закупки (₴)</label>
+                <input type="number" id="p-buy" value="1000">
+            </div>
+            <div>
+                <label>Ціна продажу (₴)</label>
+                <input type="number" id="p-sell" value="2500">
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn btn-danger" onclick="closeModal('product-modal')">Скасувати</button>
+            <button type="button" class="btn" onclick="saveProduct()">Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- НОВЕ ЗАМОВЛЕННЯ МОДАЛКА -->
+<div id="order-modal" class="modal" onclick="handleBackdropClick(event, 'order-modal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Створити замовлення</h3>
+            <button type="button" class="modal-close-x" onclick="closeModal('order-modal')">✕</button>
+        </div>
+
+        <label>Клієнт (ПІБ)</label>
+        <input type="text" id="o-client" placeholder="Олена Коваль">
+
+        <label>Місто / Адреса</label>
+        <input type="text" id="o-city" placeholder="Київ, НП №12">
+
+        <label>Товар зі складу</label>
+        <select id="o-product" onchange="updateOrderSizeSelect()"></select>
+
+        <label>Розмір товару</label>
+        <select id="o-size"></select>
+
+        <label>Формат оплати / Тип</label>
+        <select id="o-type">
+            <option value="Накладний платіж (з передоплатою)">Накладний платіж (з передоплатою)</option>
+            <option value="OLX Доставка">OLX Доставка</option>
+            <option value="Повна передоплата">Повна передоплата</option>
+        </select>
+
+        <label>Служба доставки</label>
+        <input type="hidden" id="o-carrier" value="Нова пошта">
+        <div class="carrier-grid">
+            <div class="carrier-card selected" id="carrier-opt-np" onclick="selectCarrier('Нова пошта')">
+                <div class="carrier-logo-wrap" id="logo-slot-np"></div>
+                <div style="font-size: 0.86rem; font-weight: 600;">Нова пошта</div>
+            </div>
+            <div class="carrier-card" id="carrier-opt-up" onclick="selectCarrier('Укрпошта')">
+                <div class="carrier-logo-wrap" id="logo-slot-up"></div>
+                <div style="font-size: 0.86rem; font-weight: 600;">Укрпошта</div>
+            </div>
+        </div>
+
+        <label>Номер ТТН</label>
+        <input type="text" id="o-ttn" placeholder="20450123456789" oninput="onTtnInput(this.value)">
+        <div id="o-ttn-preview" style="font-size: 0.78rem; color: var(--text-muted); margin: -6px 0 10px 0;"></div>
+
+        <label>Статус доставки</label>
+        <select id="o-status">
+            <option value="created">Створене (не відправлене)</option>
+            <option value="transit">В дорозі</option>
+            <option value="delivered">Доставлено</option>
+            <option value="returned">Відмова</option>
+        </select>
+
+        <div style="display: flex; gap: 8px; margin-top: 6px;">
+            <button type="button" class="btn btn-danger" onclick="closeModal('order-modal')">Скасувати</button>
+            <button type="button" class="btn" onclick="saveOrder()">Зберегти</button>
+        </div>
+    </div>
+</div>
+
+<!-- СПИСКИ ФІЛЬТРІВ МОДАЛКА -->
+<div id="list-modal" class="modal" onclick="handleBackdropClick(event, 'list-modal')">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3 id="list-modal-title">Список</h3>
+            <button type="button" class="modal-close-x" onclick="closeModal('list-modal')">✕</button>
+        </div>
+        <div id="modal-items-container"></div>
+        <button type="button" class="btn" style="margin-top: 14px;" onclick="closeModal('list-modal')">Закрити</button>
+    </div>
+</div>
+
+<nav>
+    <button type="button" class="nav-item active" data-tab="overview" onclick="switchTab('overview', this)">
+        <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        Огляд
+    </button>
+    <button type="button" class="nav-item" data-tab="inventory" onclick="switchTab('inventory', this)">
+        <svg viewBox="0 0 24 24"><path d="M20 13H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1v-6c0-.55-.45-1-1-1zM7 19c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM20 3H4c-.55 0-1 .45-1 1v6c0 .55.45 1 1 1h16c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1zM7 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+        Склад
+    </button>
+    <button type="button" class="nav-item" data-tab="orders" onclick="switchTab('orders', this)">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        Замовлення
+    </button>
+    <button type="button" class="nav-item" data-tab="finance" onclick="switchTab('finance', this)">
+        <svg viewBox="0 0 24 24"><path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        Фінанси
+    </button>
+    <button type="button" class="nav-item" data-tab="settings" onclick="switchTab('settings', this)">
+        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.488.488 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+        Налаштування
+    </button>
+</nav>
+
+<script>
+    // 1. Повне блокування приближення (зуму) на мобільних пристроях та iOS Safari
+    document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false });
+    document.addEventListener('touchmove', function(e) {
+        if (e.touches && e.touches.length > 1) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function(e) {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+            e.preventDefault();
+        }
+        lastTouchEnd = now;
+    }, { passive: false });
+    document.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            e.preventDefault();
+        }
+    }, { passive: false });
+
+    // 2. Безпечне сховище даних з міграцією на Rokser Store
+    const safeStorage = (function() {
+        const mem = {};
+        return {
+            get(key) {
+                try {
+                    const val = window.localStorage.getItem(key);
+                    return val !== null ? val : (mem[key] || null);
+                } catch (e) {
+                    return mem[key] || null;
+                }
+            },
+            set(key, val) {
+                mem[key] = val;
+                try {
+                    window.localStorage.setItem(key, val);
+                } catch (e) {}
+            }
+        };
+    })();
+
+    function migrateKeys() {
+        const pairs = [
+            ['roxar_inv', 'rokser_inv'],
+            ['roxar_ord', 'rokser_ord'],
+            ['roxar_exp', 'rokser_exp'],
+            ['roxar_np_api', 'rokser_np_api']
+        ];
+        pairs.forEach(([oldK, newK]) => {
+            if (!safeStorage.get(newK) && safeStorage.get(oldK)) {
+                safeStorage.set(newK, safeStorage.get(oldK));
+            }
+        });
+    }
+    migrateKeys();
+
+    // 3. Оригінальні логотипи Нової пошти та Укрпошти
+    const NP_LOGO_SVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+            <rect width="100" height="100" rx="14" fill="#EE1C25"/>
+            <path d="M50 11L72 33H59V43H41V33H28L50 11Z" fill="#FFFFFF"/>
+            <path d="M50 89L28 67H41V57H59V67H72L50 89Z" fill="#FFFFFF"/>
+            <path d="M10 50L27 33V67L10 50Z" fill="#FFFFFF"/>
+            <path d="M90 50L73 67V33L90 50Z" fill="#FFFFFF"/>
+        </svg>
+    `;
+
+    const UP_LOGO_SVG = `
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;">
+            <rect width="100" height="100" rx="14" fill="#FFFFFF"/>
+            <path d="M35 12H86L66 64C59 81 44 90 27 87C12 84 4 70 8 54C11 42 20 34 31 31L39 51C33 53 29 58 29 64C29 70 34 74 40 73C45 72 49 68 51 62L35 12Z" fill="#FFBE00"/>
+        </svg>
+    `;
+
+    function getCarrierBadgeHtml(carrier) {
+        const isNP = carrier === 'Нова пошта';
+        const svg = isNP ? NP_LOGO_SVG : UP_LOGO_SVG;
+        return `<span class="carrier-inline"><span style="width:18px;height:18px;display:inline-block;border-radius:4px;overflow:hidden;flex-shrink:0;">${svg}</span><span>${escapeHtml(carrier)}</span></span>`;
+    }
+
+    // 4. Початковий стан (чиста CRM без сторонніх замовлень)
+    const CLOTHING_SIZES = ['XS', 'S', 'M', 'L', 'XL', '2XL'];
+    const SHOE_SIZES = ['EU 35', 'EU 36', 'EU 37', 'EU 38', 'EU 39', 'EU 40', 'EU 41', 'EU 42', 'EU 43', 'EU 44', 'EU 45'];
+
+    function parseJSON(raw, fallback) {
+        if (!raw) return fallback;
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : fallback;
+        } catch (e) {
+            return fallback;
+        }
+    }
+
+    let inventory = parseJSON(safeStorage.get('rokser_inv'), [
+        {
+            id: 1,
+            name: 'Off-White Худі Arrow',
+            sku: 'P001',
+            cat: 'Одяг',
+            color: '⚫ Чорний',
+            specs: '100% бавовна, оверсайз крій',
+            sizes: { S: 2, M: 2, L: 1 },
+            buy: 3800,
+            sell: 8400,
+            img: ''
+        },
+        {
+            id: 2,
+            name: 'Nike Dunk Low Panda',
+            sku: 'P004',
+            cat: 'Взуття',
+            color: '⚪ Білий',
+            specs: 'Натуральна шкіра, оригінальна коробка',
+            sizes: { 'EU 41': 2, 'EU 42': 2, 'EU 43': 2 },
+            buy: 2800,
+            sell: 6000,
+            img: ''
+        }
+    ]);
+
+    // Нормалізація старих записів складу (якщо був 1 розмір замість сітки)
+    inventory = inventory.map(item => {
+        if (!item.sizes || typeof item.sizes !== 'object') {
+            const singleSize = item.size || 'M';
+            const singleQty = Number(item.qty) || 0;
+            item.sizes = singleQty > 0 ? { [singleSize]: singleQty } : {};
+        }
+        if (typeof item.specs !== 'string') item.specs = '';
+        return item;
+    });
+
+    let orders = parseJSON(safeStorage.get('rokser_ord'), []);
+    let expenses = parseJSON(safeStorage.get('rokser_exp'), []);
+    let npApiUrl = safeStorage.get('rokser_np_api') || 'https://api.novaposhta.ua/v2.0/json/';
+
+    let draftSizeMap = {};
+
+    function getTotalQty(item) {
+        if (!item || !item.sizes) return 0;
+        return Object.values(item.sizes).reduce((sum, q) => sum + (parseInt(q, 10) || 0), 0);
+    }
+
+    function escapeHtml(str) {
+        return String(str ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function saveData(skipRender = false) {
+        safeStorage.set('rokser_inv', JSON.stringify(inventory));
+        safeStorage.set('rokser_ord', JSON.stringify(orders));
+        safeStorage.set('rokser_exp', JSON.stringify(expenses));
+        if (!skipRender) updateAll();
+    }
+
+    // 5. Навігація та модальні вікна
+    function switchTab(tabId, el) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+        const targetTab = document.getElementById('tab-' + tabId);
+        if (targetTab) targetTab.classList.add('active');
+        if (el) {
+            el.classList.add('active');
+        } else {
+            const btn = document.querySelector(`.nav-item[data-tab="${tabId}"]`);
+            if (btn) btn.classList.add('active');
+        }
+        updateAll();
+    }
+
+    function openModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.classList.add('active');
+    }
+
+    function closeModal(id) {
+        const m = document.getElementById(id);
+        if (m) m.classList.remove('active');
+    }
+
+    function handleBackdropClick(e, id) {
+        if (e.target && e.target.id === id) {
+            closeModal(id);
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
+        }
+    });
+
+    // 6. Мульти-розмірний конструктор товару (Додавання + Редагування)
+    function openProductModal(editId = null) {
+        const titleEl = document.getElementById('product-modal-title');
+        const editInput = document.getElementById('p-edit-id');
+        document.getElementById('p-img').value = '';
+
+        if (editId !== null) {
+            const item = inventory.find(i => i.id === editId);
+            if (!item) return;
+            titleEl.textContent = 'Редагувати товар';
+            editInput.value = String(item.id);
+            document.getElementById('p-name').value = item.name || '';
+            document.getElementById('p-sku').value = item.sku || '';
+            document.getElementById('p-cat').value = item.cat || 'Одяг';
+            document.getElementById('p-color').value = item.color || '⚫ Чорний';
+            document.getElementById('p-specs').value = item.specs || '';
+            document.getElementById('p-buy').value = item.buy ?? 0;
+            document.getElementById('p-sell').value = item.sell ?? 0;
+            draftSizeMap = { ...(item.sizes || {}) };
+        } else {
+            titleEl.textContent = 'Додати товар';
+            editInput.value = '';
+            document.getElementById('p-name').value = '';
+            document.getElementById('p-sku').value = '';
+            document.getElementById('p-cat').value = 'Одяг';
+            document.getElementById('p-color').value = '⚫ Чорний';
+            document.getElementById('p-specs').value = '';
+            document.getElementById('p-buy').value = '1000';
+            document.getElementById('p-sell').value = '2500';
+            draftSizeMap = {};
+        }
+
+        renderSizeGridBuilder();
+        openModal('product-modal');
+    }
+
+    function renderSizeGridBuilder() {
+        const cat = document.getElementById('p-cat').value;
+        const sizeList = cat === 'Взуття' ? SHOE_SIZES : CLOTHING_SIZES;
+        const container = document.getElementById('p-size-grid');
+
+        container.innerHTML = sizeList.map(sz => {
+            const qty = parseInt(draftSizeMap[sz], 10) || 0;
+            return `
+                <div class="size-cell ${qty > 0 ? 'has-qty' : ''}">
+                    <div class="size-cell-label">${escapeHtml(sz)}</div>
+                    <div class="size-stepper">
+                        <button type="button" class="step-btn" onclick="changeDraftSizeQty('${escapeHtml(sz)}', -1)">−</button>
+                        <span class="size-qty-val">${qty}</span>
+                        <button type="button" class="step-btn" onclick="changeDraftSizeQty('${escapeHtml(sz)}', 1)">+</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function changeDraftSizeQty(size, delta) {
+        const current = parseInt(draftSizeMap[size], 10) || 0;
+        const next = Math.max(0, current + delta);
+        if (next === 0) {
+            delete draftSizeMap[size];
+        } else {
+            draftSizeMap[size] = next;
+        }
+        renderSizeGridBuilder();
+    }
+
+    function saveProduct() {
+        const name = document.getElementById('p-name').value.trim();
+        if (!name) {
+            showToast('Введіть назву бренду та моделі!');
+            return;
+        }
+
+        const editIdRaw = document.getElementById('p-edit-id').value;
+        const editId = editIdRaw ? Number(editIdRaw) : null;
+        const existingItem = editId ? inventory.find(i => i.id === editId) : null;
+
+        const cleanSizes = {};
+        Object.entries(draftSizeMap).forEach(([sz, q]) => {
+            const val = parseInt(q, 10) || 0;
+            if (val > 0) cleanSizes[sz] = val;
+        });
+
+        const commitProduct = (imgData) => {
+            const payload = {
+                id: editId || Date.now(),
+                img: imgData !== null ? imgData : (existingItem ? existingItem.img : ''),
+                name,
+                sku: document.getElementById('p-sku').value.trim() || ('P' + String(Date.now()).slice(-3)),
+                cat: document.getElementById('p-cat').value,
+                color: document.getElementById('p-color').value,
+                specs: document.getElementById('p-specs').value.trim(),
+                sizes: cleanSizes,
+                buy: parseFloat(document.getElementById('p-buy').value) || 0,
+                sell: parseFloat(document.getElementById('p-sell').value) || 0
+            };
+
+            if (editId && existingItem) {
+                const idx = inventory.findIndex(i => i.id === editId);
+                if (idx !== -1) inventory[idx] = payload;
+                showToast('Товар оновлено');
+            } else {
+                inventory.push(payload);
+                showToast('Товар додано на склад');
+            }
+
+            closeModal('product-modal');
+            saveData();
+        };
+
+        const fileInput = document.getElementById('p-img');
+        if (fileInput.files && fileInput.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) { commitProduct(e.target.result); };
+            reader.readAsDataURL(fileInput.files[0]);
+        } else {
+            commitProduct(null);
+        }
+    }
+
+    function deleteProduct(id) {
+        inventory = inventory.filter(i => i.id !== id);
+        saveData();
+        showToast('Товар видалено');
+    }
+
+    // 7. Створення та трекінг замовлень
+    function openOrderModal() {
+        document.getElementById('o-client').value = '';
+        document.getElementById('o-city').value = '';
+        document.getElementById('o-ttn').value = '';
+        document.getElementById('o-ttn-preview').textContent = '';
+        document.getElementById('o-status').value = 'created';
+        selectCarrier('Нова пошта');
+        updateProductSelect();
+        openModal('order-modal');
+    }
+
+    function selectCarrier(carrier) {
+        document.getElementById('o-carrier').value = carrier;
+        document.getElementById('carrier-opt-np').classList.toggle('selected', carrier === 'Нова пошта');
+        document.getElementById('carrier-opt-up').classList.toggle('selected', carrier === 'Укрпошта');
+    }
+
+    function updateProductSelect() {
+        const sel = document.getElementById('o-product');
+        if (!inventory.length) {
+            sel.innerHTML = '<option value="">Склад порожній</option>';
+            updateOrderSizeSelect();
+            return;
+        }
+        sel.innerHTML = inventory.map(i => {
+            const total = getTotalQty(i);
+            return `<option value="${i.id}">${escapeHtml(i.name)} (${escapeHtml(i.color)}) — ${i.sell} ₴ [${total} шт]</option>`;
+        }).join('');
+        updateOrderSizeSelect();
+    }
+
+    function updateOrderSizeSelect() {
+        const prodId = Number(document.getElementById('o-product').value);
+        const prod = inventory.find(i => i.id === prodId);
+        const sizeSel = document.getElementById('o-size');
+
+        if (!prod) {
+            sizeSel.innerHTML = '<option value="-">—</option>';
+            return;
+        }
+
+        const entries = Object.entries(prod.sizes || {}).filter(([, q]) => q > 0);
+        if (entries.length) {
+            sizeSel.innerHTML = entries.map(([sz, q]) =>
+                `<option value="${escapeHtml(sz)}">${escapeHtml(sz)} (в наявності: ${q} шт)</option>`
+            ).join('');
+        } else {
+            const fallbackSizes = prod.cat === 'Взуття' ? SHOE_SIZES : CLOTHING_SIZES;
+            sizeSel.innerHTML = fallbackSizes.map(sz =>
+                `<option value="${escapeHtml(sz)}">${escapeHtml(sz)} (0 шт)</option>`
+            ).join('');
+        }
+    }
+
+    function onTtnInput(val) {
+        const clean = val.replace(/\s+/g, '');
+        const preview = document.getElementById('o-ttn-preview');
+        if (clean.length === 14 && document.getElementById('o-carrier').value === 'Нова пошта') {
+            preview.textContent = '⏳ Перевірка ТТН через Нову пошту...';
+            fetchNovaPoshtaTracking(clean).then(res => {
+                if (res) {
+                    preview.textContent = `📍 ${res.location}`;
+                    if (res.mappedStatus) {
+                        document.getElementById('o-status').value = res.mappedStatus;
+                    }
+                    const cityInput = document.getElementById('o-city');
+                    if (!cityInput.value.trim() && res.city) {
+                        cityInput.value = res.city;
+                    }
+                } else {
+                    preview.textContent = 'ТТН збережено для авто-трекінгу 24/7';
+                }
+            });
+        } else {
+            preview.textContent = '';
+        }
+    }
+
+    function saveOrder() {
+        const prodId = Number(document.getElementById('o-product').value);
+        const selectedSize = document.getElementById('o-size').value || '-';
+        const prod = inventory.find(i => i.id === prodId);
+
+        if (!prod) {
+            showToast('Спочатку додайте товар на склад!');
+            return;
+        }
+
+        if (prod.sizes && prod.sizes[selectedSize] > 0) {
+            prod.sizes[selectedSize] -= 1;
+            if (prod.sizes[selectedSize] <= 0) {
+                delete prod.sizes[selectedSize];
+            }
+        }
+
+        const carrier = document.getElementById('o-carrier').value;
+        const ttn = document.getElementById('o-ttn').value.trim();
+        const status = document.getElementById('o-status').value;
+
+        const newOrder = {
+            id: Date.now(),
+            client: document.getElementById('o-client').value.trim() || 'Клієнт',
+            city: document.getElementById('o-city').value.trim() || 'Місто не вказано',
+            prodId,
+            size: selectedSize,
+            type: document.getElementById('o-type').value,
+            carrier,
+            ttn,
+            status,
+            location: status === 'transit' ? 'Прямує у місто одержувача' : (status === 'created' ? 'Очікує передачі перевізнику' : ''),
+            date: new Date().toISOString().split('T')[0]
+        };
+
+        orders.push(newOrder);
+        closeModal('order-modal');
+        saveData();
+        showToast('Замовлення створено');
+
+        if (carrier === 'Нова пошта' && ttn.replace(/\s+/g, '').length >= 11) {
+            syncAllNovaPoshtaOrders(true);
+        }
+    }
+
+    function updateOrderStatus(id, newStatus) {
+        const ord = orders.find(o => o.id === id);
+        if (!ord) return;
+        const prevStatus = ord.status;
+        ord.status = newStatus;
+
+        // Повертаємо товар на склад, якщо статус змінено на "Відмова"
+        if (newStatus === 'returned' && prevStatus !== 'returned') {
+            const prod = inventory.find(i => i.id === ord.prodId);
+            if (prod && ord.size && ord.size !== '-') {
+                prod.sizes = prod.sizes || {};
+                prod.sizes[ord.size] = (prod.sizes[ord.size] || 0) + 1;
+            }
+        }
+        saveData();
+    }
+
+    function deleteOrder(id) {
+        orders = orders.filter(o => o.id !== id);
+        saveData();
+        showToast('Замовлення видалено');
+    }
+
+    // 8. Налаштування та автоматична 24/7 синхронізація Нової пошти кожні 5 хв
+    function saveNpSettings() {
+        const val = document.getElementById('np-api-url').value.trim() || 'https://api.novaposhta.ua/v2.0/json/';
+        npApiUrl = val;
+        safeStorage.set('rokser_np_api', npApiUrl);
+        const st = document.getElementById('np-settings-status');
+        st.textContent = '✅ Адресу збережено. Автосинхронізація ТТН активна 24/7.';
+        showToast('Налаштування Нової пошти збережено');
+        syncAllNovaPoshtaOrders(true);
+    }
+
+    function mapNpStatusCode(code) {
+        const c = Number(code);
+        if (c === 1) return 'created';
+        if ([9, 10, 11].includes(c)) return 'delivered';
+        if ([102, 103, 105, 111].includes(c)) return 'returned';
+        if ([4, 5, 6, 7, 8, 41, 101, 104].includes(c)) return 'transit';
+        return null;
+    }
+
+    async function fetchNovaPoshtaTracking(ttn) {
+        const cleanTtn = String(ttn || '').replace(/\s+/g, '');
+        if (!cleanTtn) return null;
+        const endpoint = (npApiUrl || 'https://api.novaposhta.ua/v2.0/json/').trim();
+
+        try {
+            const response = await fetch(endpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    modelName: 'TrackingDocument',
+                    calledMethod: 'getStatusDocuments',
+                    methodProperties: {
+                        Documents: [{ DocumentNumber: cleanTtn, Phone: '' }]
+                    }
+                })
+            });
+            const data = await response.json();
+            if (data && data.success && Array.isArray(data.data) && data.data[0]) {
+                const doc = data.data[0];
+                const warehouse = doc.WarehouseRecipient || doc.WarehouseRecipientAddress || '';
+                const city = doc.CityRecipient || '';
+                const statusText = doc.Status || '';
+                const location = [statusText, city, warehouse].filter(Boolean).join(' • ');
+                return {
+                    mappedStatus: mapNpStatusCode(doc.StatusCode),
+                    location: location || 'Дані отримано від Нової пошти',
+                    city
+                };
+            }
+        } catch (err) {
+            return null;
+        }
+        return null;
+    }
+
+    async function syncAllNovaPoshtaOrders(silent = true) {
+        const syncDot = document.getElementById('sync-dot');
+        const syncLabel = document.getElementById('sync-label');
+        if (syncDot) syncDot.classList.add('syncing');
+        if (syncLabel) syncLabel.textContent = 'Синхронізація...';
+
+        const activeOrders = orders.filter(o =>
+            o.carrier === 'Нова пошта' &&
+            o.ttn &&
+            o.ttn.replace(/\s+/g, '').length >= 11 &&
+            o.status !== 'delivered' &&
+            o.status !== 'returned'
+        );
+
+        let changed = false;
+        for (const ord of activeOrders) {
+            const res = await fetchNovaPoshtaTracking(ord.ttn);
+            if (res) {
+                if (res.location && ord.location !== res.location) {
+                    ord.location = res.location;
+                    changed = true;
+                }
+                if (res.mappedStatus && ord.status !== res.mappedStatus) {
+                    ord.status = res.mappedStatus;
+                    changed = true;
+                }
+            }
+        }
+
+        const nowStr = new Date().toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        const lastSyncEl = document.getElementById('last-sync-time');
+        if (lastSyncEl) lastSyncEl.textContent = `Оновлено о ${nowStr} (кожні 5 хв)`;
+
+        if (syncDot) syncDot.classList.remove('syncing');
+        if (syncLabel) syncLabel.textContent = 'НП Sync 24/7';
+
+        if (changed) {
+            saveData(false);
+        }
+    }
+
+    // 9. Витрати на рекламу
+    function addExpense() {
+        const channel = document.getElementById('ad-channel').value.trim();
+        const amount = parseFloat(document.getElementById('ad-amount').value);
+        if (!channel || !amount || amount <= 0) {
+            showToast('Вкажіть канал та суму витрат');
+            return;
+        }
+        expenses.push({
+            id: Date.now(),
+            channel,
+            amount,
+            date: new Date().toISOString().split('T')[0]
+        });
+        document.getElementById('ad-channel').value = '';
+        document.getElementById('ad-amount').value = '';
+        saveData();
+        showToast('Витрату додано');
+    }
+
+    function deleteExpense(id) {
+        expenses = expenses.filter(e => e.id !== id);
+        saveData();
+    }
+
+    // 10. Рендеринг Складу, Замовлень та Огляду
+    function renderInventory(filterSku = '') {
+        const search = document.getElementById('search-inventory').value.toLowerCase().trim();
+        const list = document.getElementById('inventory-list');
+
+        const filtered = inventory.filter(i => {
+            if (filterSku) return i.sku === filterSku;
+            if (!search) return true;
+            return (
+                (i.name || '').toLowerCase().includes(search) ||
+                (i.sku || '').toLowerCase().includes(search) ||
+                (i.color || '').toLowerCase().includes(search) ||
+                (i.specs || '').toLowerCase().includes(search)
+            );
+        });
+
+        if (!filtered.length) {
+            list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:24px 0; font-size:0.9rem;">Товарів не знайдено</div>';
+            return;
+        }
+
+        list.innerHTML = filtered.map(i => {
+            const totalQty = getTotalQty(i);
+            const sizeEntries = Object.entries(i.sizes || {});
+            const sizeBadges = sizeEntries.length
+                ? sizeEntries.map(([sz, q]) => `<span class="size-chip ${q <= 0 ? 'empty' : ''}">${escapeHtml(sz)}: ${q}</span>`).join('')
+                : '<span class="size-chip empty">Немає в наявності</span>';
+
+            return `
+                <div class="item-row">
+                    <div class="item-img">${i.img ? `<img src="${i.img}" style="width:100%;height:100%;object-fit:cover;">` : (i.cat === 'Взуття' ? '👟' : '👕')}</div>
+                    <div class="item-info">
+                        <div class="item-title">${escapeHtml(i.name)}</div>
+                        <div class="item-subtitle">${escapeHtml(i.sku)} • ${escapeHtml(i.cat)} • ${escapeHtml(i.color)}</div>
+                        ${i.specs ? `<div style="font-size:0.76rem; color:#cbd5e1; margin-bottom:6px;">${escapeHtml(i.specs)}</div>` : ''}
+                        <div class="size-chips">${sizeBadges}</div>
+                        <div style="font-size: 0.83rem; font-weight: 600;">Закупка ${i.buy} ₴ → ${i.sell} ₴</div>
+                    </div>
+                    <div class="item-actions">
+                        <div style="font-weight: 700; font-size: 1rem;">${totalQty} шт</div>
+                        <div class="action-btns-row">
+                            <button type="button" class="icon-btn" title="Редагувати" onclick="openProductModal(${i.id})">✏️</button>
+                            <button type="button" class="icon-btn delete" title="Видалити" onclick="deleteProduct(${i.id})">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function renderOrders() {
+        const statusFilter = document.getElementById('order-status-filter').value;
+        const list = document.getElementById('orders-list');
+        const filtered = orders.filter(o => statusFilter === 'all' || o.status === statusFilter);
+
+        filtered.sort((a, b) => {
+            if (a.status === 'created' && b.status !== 'created') return -1;
+            if (a.status !== 'created' && b.status === 'created') return 1;
+            return b.id - a.id;
+        });
+
+        if (!filtered.length) {
+            list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:28px 0; font-size:0.9rem;">Замовлень поки немає. Натисніть «+ Замовлення», щоб створити перше.</div>';
+            return;
+        }
+
+        const statusBadges = {
+            created: '<span class="badge badge-orange">Створене</span>',
+            transit: '<span class="badge badge-orange">🚚 В дорозі</span>',
+            delivered: '<span class="badge badge-green">✅ Доставлено</span>',
+            returned: '<span class="badge badge-red">❌ Відмова</span>'
+        };
+
+        list.innerHTML = filtered.map(o => {
+            const prod = inventory.find(i => i.id === o.prodId) || { name: 'Товар', color: '-', specs: '' };
+            const sizeText = o.size || prod.size || '-';
+            return `
+                <div class="card" style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px;">
+                        <strong>#${String(o.id).slice(-4)} • ${escapeHtml(o.client)} (${escapeHtml(o.city)})</strong>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            ${statusBadges[o.status] || ''}
+                            <button type="button" class="icon-btn delete" style="width:26px;height:26px;font-size:0.8rem;" onclick="deleteOrder(${o.id})">🗑️</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.88rem; margin-bottom: 6px;">
+                        📦 <b>${escapeHtml(prod.name)}</b> • Розмір: <b>${escapeHtml(sizeText)}</b> • ${escapeHtml(prod.color)}
+                        ${prod.specs ? `<div style="font-size:0.76rem; color:var(--text-muted); margin-top:2px;">${escapeHtml(prod.specs)}</div>` : ''}
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; display:flex; flex-wrap:wrap; align-items:center; gap:6px;">
+                        ${getCarrierBadgeHtml(o.carrier)}
+                        <span>• ТТН: <b style="color:var(--text-color);">${escapeHtml(o.ttn || 'Без ТТН')}</b></span>
+                        <span>• ${escapeHtml(o.type)}</span>
+                    </div>
+                    ${o.location ? `<div class="location-pill" style="margin-bottom:8px;"><span>📍</span><span>${escapeHtml(o.location)}</span></div>` : ''}
+                    <select onchange="updateOrderStatus(${o.id}, this.value)" style="margin-bottom: 0; padding: 7px 10px;">
+                        <option value="created" ${o.status === 'created' ? 'selected' : ''}>Створене (не відправлене)</option>
+                        <option value="transit" ${o.status === 'transit' ? 'selected' : ''}>В дорозі</option>
+                        <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>Доставлено</option>
+                        <option value="returned" ${o.status === 'returned' ? 'selected' : ''}>Відмова</option>
+                    </select>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function isWithinPeriod(dateStr, period) {
+        if (!dateStr) return true;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return true;
+        const now = new Date();
+        const daysMap = {
+            week: 7,
+            month: 31,
+            '3months': 92,
+            '6months': 183,
+            year: 366
+        };
+        const maxDays = daysMap[period] || 31;
+        const diffDays = (now - d) / (1000 * 60 * 60 * 24);
+        return diffDays <= maxDays;
+    }
+
+    function updateOverview() {
+        const period = document.getElementById('stats-period').value;
+        const periodOrders = orders.filter(o => isWithinPeriod(o.date, period));
+        const periodExpenses = expenses.filter(e => isWithinPeriod(e.date, period));
+
+        let totalRev = 0;
+        let totalProfit = 0;
+        let successCount = 0;
+        let returnCount = 0;
+        const clientsSet = new Set();
+
+        periodOrders.forEach(o => {
+            const prod = inventory.find(i => i.id === o.prodId) || { buy: 0, sell: 0 };
+            if (o.status === 'delivered' || o.status === 'transit') {
+                totalRev += Number(prod.sell) || 0;
+                totalProfit += (Number(prod.sell) || 0) - (Number(prod.buy) || 0);
+            }
+            if (o.status === 'delivered') successCount++;
+            if (o.status === 'returned') returnCount++;
+            if (o.client) clientsSet.add(o.client);
+        });
+
+        const totalAds = periodExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+        const netProfit = totalProfit - totalAds;
+
+        document.getElementById('stat-revenue').textContent = totalRev + ' ₴';
+        document.getElementById('stat-profit').textContent = netProfit + ' ₴';
+        document.getElementById('stat-success').textContent = successCount;
+        document.getElementById('stat-returns').textContent = returnCount;
+        document.getElementById('stat-clients').textContent = clientsSet.size;
+
+        // В дорозі (з повною деталізацією товару, розміру, кольору, специфіки та місця знаходження)
+        const transitList = document.getElementById('transit-list');
+        const transitOrders = orders.filter(o => o.status === 'transit');
+        transitList.innerHTML = transitOrders.length ? transitOrders.map(o => {
+            const prod = inventory.find(i => i.id === o.prodId) || { name: 'Товар', sku: '-', color: '-', specs: '' };
+            const sizeText = o.size || prod.size || '-';
+            return `
+                <div class="card" style="padding: 12px; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+                        <div>
+                            <div style="font-weight:700; font-size:0.92rem;">#${String(o.id).slice(-4)} • ${escapeHtml(o.client)} (${escapeHtml(o.city)})</div>
+                            <div style="font-size:0.78rem; color:var(--text-muted); margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                                ${getCarrierBadgeHtml(o.carrier)}
+                                <span>• ТТН: <b>${escapeHtml(o.ttn || 'Без ТТН')}</b></span>
+                            </div>
+                        </div>
+                        <span class="badge badge-orange">🚚 В дорозі</span>
+                    </div>
+
+                    <div class="location-pill">
+                        <span>📍</span>
+                        <span><b>Місцезнаходження:</b> ${escapeHtml(o.location || 'У дорозі до відділення одержувача')}</span>
+                    </div>
+
+                    <div class="transit-product-box">
+                        <div style="font-weight: 600; color: var(--text-color); margin-bottom: 3px;">
+                            📦 ${escapeHtml(prod.name)} <span style="color:var(--text-muted); font-weight:400;">(${escapeHtml(prod.sku)})</span>
+                        </div>
+                        <div style="color: #cbd5e1; font-size: 0.78rem;">
+                            Розмір: <b>${escapeHtml(sizeText)}</b> • Колір: <b>${escapeHtml(prod.color)}</b>
+                        </div>
+                        ${prod.specs ? `<div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 3px;">Специфіка: ${escapeHtml(prod.specs)}</div>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('') : '<div style="color:var(--text-muted); font-size:0.88rem;">Немає посилок в дорозі</div>';
+
+        // Закінчується на складі
+        const lowList = document.getElementById('low-stock-list');
+        const lowItems = inventory.filter(i => getTotalQty(i) <= 2);
+        lowList.innerHTML = lowItems.length ? lowItems.map(i => {
+            const qty = getTotalQty(i);
+            return `
+                <div class="card" style="padding: 11px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="jumpToInventory('${escapeHtml(i.sku)}')">
+                    <div>
+                        <div style="font-weight:600; font-size:0.9rem;">${escapeHtml(i.name)}</div>
+                        <div style="font-size:0.76rem; color:var(--text-muted);">Артикул: ${escapeHtml(i.sku)} • Залишок: <b>${qty} шт</b></div>
+                    </div>
+                    <span class="badge badge-red">Мало</span>
+                </div>
+            `;
+        }).join('') : '<div style="color:var(--text-muted); font-size:0.88rem;">Усе в нормі</div>';
+
+        // Фінанси складу
+        const totalCost = inventory.reduce((sum, i) => sum + ((Number(i.buy) || 0) * getTotalQty(i)), 0);
+        const totalPotential = inventory.reduce((sum, i) => sum + ((Number(i.sell) || 0) * getTotalQty(i)), 0);
+        document.getElementById('fin-cost').textContent = totalCost + ' ₴';
+        document.getElementById('fin-potential').textContent = totalPotential + ' ₴';
+
+        // Список витрат
+        document.getElementById('expenses-list').innerHTML = expenses.length ? expenses.map(e => `
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; padding: 8px 0; border-bottom: 1px solid var(--border);">
+                <span>${escapeHtml(e.date)} • ${escapeHtml(e.channel)}</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <b>-${e.amount} ₴</b>
+                    <button type="button" class="icon-btn delete" style="width:24px;height:24px;font-size:0.75rem;" onclick="deleteExpense(${e.id})">✕</button>
+                </div>
+            </div>
+        `).join('') : '<div style="color:var(--text-muted); font-size:0.85rem;">Витрат ще немає</div>';
+    }
+
+    function jumpToInventory(sku) {
+        switchTab('inventory');
+        document.getElementById('search-inventory').value = sku;
+        renderInventory(sku);
+    }
+
+    function openFilteredList(type) {
+        const modalTitle = document.getElementById('list-modal-title');
+        const container = document.getElementById('modal-items-container');
+        if (type === 'success') {
+            modalTitle.textContent = 'Успішні замовлення';
+            const succ = orders.filter(o => o.status === 'delivered');
+            container.innerHTML = succ.map(o => `<div style="padding:8px 0; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;"><span>${escapeHtml(o.client)} — ${escapeHtml(o.city)}</span>${getCarrierBadgeHtml(o.carrier)}</div>`).join('') || 'Немає';
+        } else if (type === 'returns') {
+            modalTitle.textContent = 'Відмови / Повернення';
+            const rets = orders.filter(o => o.status === 'returned');
+            container.innerHTML = rets.map(o => `<div style="padding:8px 0; border-bottom:1px solid var(--border)">${escapeHtml(o.client)} — ${escapeHtml(o.city)}</div>`).join('') || 'Немає';
+        } else if (type === 'clients') {
+            modalTitle.textContent = 'Список клієнтів';
+            const clients = [...new Set(orders.map(o => o.client).filter(Boolean))];
+            container.innerHTML = clients.map(c => `<div style="padding:8px 0; border-bottom:1px solid var(--border)">👤 ${escapeHtml(c)}</div>`).join('') || 'Немає';
+        }
+        openModal('list-modal');
+    }
+
+    function updateAll() {
+        renderInventory();
+        renderOrders();
+        updateOverview();
+    }
+
+    // Ініціалізація логотипів, налаштувань та 24/7 автосинхронізації
+    document.getElementById('logo-slot-np').innerHTML = NP_LOGO_SVG;
+    document.getElementById('logo-slot-up').innerHTML = UP_LOGO_SVG;
+    document.getElementById('np-api-url').value = npApiUrl;
+
+    updateAll();
+    syncAllNovaPoshtaOrders(true);
+
+    // Автоматичне оновлення ТТН кожні 5 хвилин (300 000 мс) у режимі 24/7
+    setInterval(() => {
+        syncAllNovaPoshtaOrders(true);
+    }, 5 * 60 * 1000);
+
+    // Миттєва синхронізація при поверненні в CRM
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            syncAllNovaPoshtaOrders(true);
+        }
+    });
+</script>
+</body>
+</html>
